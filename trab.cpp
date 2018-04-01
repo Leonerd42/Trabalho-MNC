@@ -1,4 +1,4 @@
-//  Trabalho 1 - M?todos Num?ricos Computacionais
+//  Trabalho 1 - Métodos Numéricos Computacionais
 //  
 //  Grupo: 
 //			Gabriel Vieira
@@ -16,51 +16,51 @@
 #include <locale.h>
 #include <windows.h>
 
-int global_func = 2; 	//Variavel global para selecionar a fun??o de op??o do usuario
+int global_func = 2; 	//Variavel global para selecionar a função de opção do usuario
 //Rotina para posicionar o curso na tela
 void gotoxy(int x, int y){
      SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE),(COORD){x-1,y-1});
 }
 
 /******************************************************************************
-					ROTINAS DE C?LCULOS MATEM?TICOS SIMPLES
+					ROTINAS DE CÁLCULOS MATEMÁTICOS SIMPLES
 *******************************************************************************/
-//Fun??o para come?ar a implementar 
+//Função para começar a implementar 
 float f(float x){	
 	if(global_func == 1)	return (x + 2*cos(x)); 
 	if(global_func == 2)	return (pow(x,3) - 4*(pow(x,2)) + x + 6);
 	if(global_func == 3)	return (pow(x,5) - (10/9)*pow(x,3) + (5/21)*x);	
 	//return pow(sin(x),2);
 }
-//Fun??o para verificar a converg?ncia
+//Funçãoo para verificar a convergência
 int conve(float a,float b, float func (float v)){						
 	float fa = func(a), fb = func(b);
 	if((fa*fb) < 0)
 		return 1; 
 	else return 0; 
 }
-//FUN??O PARA RETORNAR O MODULO DE UM VALOR 
+//FUNÇÃO PARA RETORNAR O MODULO DE UM VALOR 
 float modulo(float x){		
 	if(x < 0) 
 		return x * (-1);
 	else 
 		return x; 
 }
-//FUN??O PARA RETORNAR O MODULO DE UM INTERVALO 
+//FUNÇÃO PARA RETORNAR O MODULO DE UM INTERVALO 
 float moduloIntervalo(float b, float a){	
 	
 	if(b - a < 0)
 		return (b-a) * (-1);
 	else return b - a;
 }
-//Fun??o para calcular m?dia
+//Função para calcular média
 float media(float a, float b){ 	
 	return ((a+b)/2);
 }
-//Fun??o para calcular a m?dia ponderada
-float mediaPonderada(float a, float b, float fa, float fb){	// 0 - N?o divide nada, 1 - f(a)/2, 2 - f(b)/2
+//Função para calcular a média ponderada
+float mediaPonderada(float a, float b, float fa, float fb){	// 0 - Não divide nada, 1 - f(a)/2, 2 - f(b)/2
 	return (a*fb - b*fa) / (fb - fa); }
-//Fun??o para retornar valor maior que 1, ou 1 
+//Função para retornar valor maior que 1, ou 1 
 float max(float x){		
 	if(modulo(x) > 1)
 		return x; 
@@ -72,17 +72,17 @@ int arredonda(double number){
     return (number >= 0) ? (int)(number + 0.5) : (int)(number - 0.5);
 }
 /*******************************************************************************
-							DIFERENCIA??O NUM?RICA
+							DIFERENCIAÇÃO NUMÉRICA
 *******************************************************************************/
-//Equa??o para o c?lculo da derivada primera
+//Equação para o cálculo da derivada primera
 float derivada_da_primeira(float x, float h,float func(float v)){
 	return (func(x+h) - func(x-h))/(2*h);		
 }
-//Equa??o para o c?lculo da derivada segunda
+//Equação para o cálculo da derivada segunda
 float derivada_da_segunda(float x, float h,float func (float v)){
 	return ((func(x + (2*h))) - 2*(func(x)) + (func(x - (2*h))))/((2*h)*(2*h));	
 }
-//Fun??o para calcular derivada primeira
+//Função para calcular derivada primeira
 float df(float pre, int max_ite, float func(float v), float x){
 	int ite_fi = 0;
 	float fx, fx_ant, erro_ant,erro, h = 1; 
@@ -110,14 +110,14 @@ float df(float pre, int max_ite, float func(float v), float x){
 	return fx_ant;
 		
 }
-//Fun??o para calcular derivada segunda
+//Função para calcular derivada segunda
 float df2(float pre, int max_ite, float func(float v), float x){
 	float fx, fx_ant, erro_ant,erro, h = 1; 
 	int ver=0, ite_fi = 0; 
 	while(ite_fi != max_ite && ver == 0){
 		fx_ant = fx;
 		fx = derivada_da_segunda(x,h,func);
-		if(ite_fi > 0){ // calculo das condi?oes de parada
+		if(ite_fi > 0){ // calculo das condiçoes de parada
 			erro_ant = erro;
 			erro = modulo (fx - fx_ant)/ max(x);
 			if(erro < pre) 
@@ -144,9 +144,9 @@ void Hessiana(int vetor_x, float funcN(float v), int v[], int hess[][10]){
 	
 }
 /******************************************************************************
-						C?LCULO DOS ZEROS DE FUN??ES
+						CÁLCULO DOS ZEROS DE FUNÇÕES
 ******************************************************************************/
-//M?todo da bisse??o 
+//Método da bisseção 
 int bissecao(float pre, int ite, float fun(float v), float a, float b, int *ite_fi, float *x){	//Parametros colocados de acordo com o documento do trabalho
 	
 	(*ite_fi)++;
@@ -168,7 +168,7 @@ int bissecao(float pre, int ite, float fun(float v), float a, float b, int *ite_
 		printf("\n\tn?o ? possivel"); 
 	}		
 }
-//M?todo Posi??o Falsa
+//Método Posição Falsa
 int PosicaoFalsa(float pre, int ite_max, float func(float v), float a, float b, int *ite_fi, float *x){
 	
 	(*ite_fi)++; 
@@ -189,12 +189,12 @@ int PosicaoFalsa(float pre, int ite_max, float func(float v), float a, float b, 
 		
 	}else printf("n?o ? possivel");	
 }
-//M?todo da Posi??o Falsa modificada
+//Método da Posiçãoo Falsa modificada
 int PosicaoFalsaModificada(float pre, int max_ite,float func(float v),float a, float b, int *ite_fi, float *x){
 	
 
 }
-//M?todo de Newton
+//Método de Newton
 int Newton (float pre, int ite_max, float func(float v), float *x0, int *ite_fi, float *x){
 	(*ite_fi)++; 		//Somando 1 no n?mero de itera??es 
 	if((*ite_fi) >= ite_max)
