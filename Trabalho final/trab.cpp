@@ -15,21 +15,46 @@
 #include <windows.h>
 
 int global_func = 2; 	//Variavel global para selecionar a função de opção do usuario
+int global_funcN = 1; 
+
 //Rotina para posicionar o curso na tela
 void gotoxy(int x, int y){
      SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE),(COORD){x-1,y-1});
 }
-
-/******************************************************************************
-					ROTINAS DE CÁLCULOS MATEMÁTICOS SIMPLES
+/*******************************************************************************
+			AS ROTINAS DAS FUNÇÕES MATÉMATICAS DE 1 OU MAIS VARIAVEIS 
 *******************************************************************************/
-//Função para começar a implementar 
+//Nessa parte do código ficam as funções que são alteradas pelas variaveis globais 
+//global_func e global_funcN... Essa funções são chamadas durante a execução dos
+//métodos, logo alterando essas funções, fará com que os métodos trabalhem com 
+//a função alterada
+// -----------------    Funções polinomiais e trigonometricas
 float f(float x){	
 	if(global_func == 1)	return (x + 2*cos(x)); 
-	if(global_func == 2)	return (pow(x,3) - 4*(pow(x,2)) + x + 6);
+	if(global_func == 2)	return (0); //return (pow(x,3) - 4*(pow(x,2)) + x + 6);
 	if(global_func == 3)	return (pow(x,5) - (10/9)*pow(x,3) + (5/21)*x);	
 	//return pow(sin(x),2);
 }
+// -----------------    Muda a string da função escolhida
+void defini_func (char s[]){	
+	if(global_func == 1)	
+		strcpy(s,"f(x) = x + 2cos(x)"); 
+	if(global_func == 2)
+		strcpy(s,"f(x) = x^3 - 4x^2 + x + 6");
+	if(global_func == 3)
+		strcpy(s,"f(x) = x^5 - (10/9)x^3 + (5/21)x");	
+}
+// -----------------    Funções de mais de uma variaveis (max 3)
+float fN(float x1, float x2, float x3){
+	
+}
+// -----------------    Muda a string da função de mais de uma variavel escolhida
+void defini_funcN (char sN[]){	
+	strcpy(sN,"f(x) = x1^2 + 2*x1*x2 + x2^3");
+}
+/******************************************************************************
+					ROTINAS DE CÁLCULOS MATEMÁTICOS SIMPLES
+*******************************************************************************/
 //Função para verificar a convergência
 int conve(float a,float b, float func (float v)){						
 	float fa = func(a), fb = func(b);
@@ -161,9 +186,7 @@ int bissecao(float pre, int ite, float fun(float v), float a, float b, int *ite_
 					return bissecao(pre,ite,fun,a,(*x),&(*ite_fi),&(*x));
 				else return bissecao(pre,ite,fun,(*x),b,&(*ite_fi),&(*x));
 			}
-	}else {
-		printf("\n\tnão é possivel"); 
-	}		
+	}else return -1; 		
 }
 //Método Posição Falsa
 int PosicaoFalsa(float pre, int ite_max, float func(float v), float a, float b, int *ite_fi, float *x){
@@ -184,13 +207,57 @@ int PosicaoFalsa(float pre, int ite_max, float func(float v), float a, float b, 
 				else return PosicaoFalsa(pre,ite_max,func,(*x),b,&(*ite_fi),&(*x));
 			}
 		
-	}else printf("não é possivel");	
+	}else return -1; 
 }
 //Método da Posiçãoo Falsa modificada
 int PosicaoFalsaModificada(float pre, int max_ite,float func(float v),float a, float b, int *ite_fi, float *x){
 	
-
-}
+	(*ite_fi) = 0; 
+	int ver = 0; 
+	float x0 = a, aux; 	
+	float a_ant, b_ant; 
+		
+	if(conve(a,b,func) == 1){
+		
+		(*ite_fi)++; 		//1ª iteração da rotina
+		(*x) = mediaPonderada(a,b,func(a),func(b));		//Calcula x com a media ponderada normalmente 
+		a_ant = a; b_ant = b; 							//Atribui os primeiros valores de a e b pras variaveis anteriores
+					
+		if(func(a) * func(*x) < 0)			//Verifica o novo intervalo 
+			b = (*x); 
+		else a = (*x); 
+		
+		if(modulo(func(*x)) < pre || moduloIntervalo(b,a) < pre)	//Verifica o critério de parada
+			return 1; 
+		
+		while (ver == 0){		//Ver é a variavel de verificação de erros 
+			(*ite_fi)++; 
+			if((*ite_fi) > max_ite) 
+				return 0;
+				
+			aux = (*x); 	//Armaneza o valor de x
+			
+			if((func(x0) * func(*x)) > 0){		//Verifica se fx0 e fx > 0
+				if(a_ant == a)					//Verifica se o ponto fixo é o a
+					(*x) = mediaPonderada(a,b,func(a)/2,func(b));
+				if(b_ant == b)					//Verifica se o ponto fixo é o b
+					(*x) = mediaPonderada(a,b,func(a),func(b)/2);
+			}else (*x) = mediaPonderada(a,b,func(a),func(b)); 		//Calcula normamente se fx0 e fx > 0 = false
+			
+			a_ant = a; b_ant = b; 		//Armazena os valores de a e b 
+				
+			if(func(a) * func(*x) < 0)			//Verifica o novo intervalo 
+				b = (*x); 
+			else a = (*x);
+				
+			x0 = aux; 					//Atribui para x0 o valor de x antes do novo cálculo 
+			
+			if(modulo(func(*x)) < pre || moduloIntervalo(b,a) < pre)  // Verifica os critérios de parada
+				return 1; 				
+		}		//Final do while
+	}else return -1;
+	system("pause");
+	}
 //Método de Newton
 int Newton (float pre, int ite_max, float func(float v), float *x0, int *ite_fi, float *x){
 	(*ite_fi)++; 		//Somando 1 no número de iterações 
@@ -204,7 +271,7 @@ int Newton (float pre, int ite_max, float func(float v), float *x0, int *ite_fi,
 			return 1; 		//Retorna	
 		(*x0) = (*x);		//Atribui o valor de x para o x0 
 		return Newton(pre,ite_max,f,&(*x0),&(*ite_fi),&(*x));	//Chama newton novamente	
-	}else printf("não é possivel");
+	}else return -1;
 	return 0;		//Derivada da função é = 0, falha no processamento
 }
 //Método Newton Modificado
@@ -213,7 +280,7 @@ float NewtonModificado(float pre,int ite_max, float func(float v), float *x0, in
 	(*ite_fi)++; 
 	if((*ite_fi) >= ite_max)
 		return 0; 
-	if(df(pre,20,func,*x0) != 0){
+	if(df(pre,20,func,*x0) != 0){		//Verifica se a derivada da função é diferente de 0
 		float x_anterior = (*x); 
 		if((*ite_fi) == 1)
 			(*x) = (*x0) - (f(*x0)/df(pre,20,func,*x0)); 
@@ -226,7 +293,7 @@ float NewtonModificado(float pre,int ite_max, float func(float v), float *x0, in
 		if(df(pre,20,func,*x) != 0)
 			(*x0) = (*x);
 	return NewtonModificado(pre,ite_max,f,&(*x0),&(*ite_fi),&(*x));		
-	}else printf("não é possivel");
+	}else return -1; 
 }
 /*****************************************************************************
 						COLETA DE DADOS DO USUARIO
@@ -363,44 +430,46 @@ void coleta_dados_der(float *precisao, int *max_ite, float *x){
 					ROTINAS DA INTERFACE COM O USUARIO
 *****************************************************************************/
 //Função para mostrar o menu principal para o usuario
-int menu(char s[]){
+int menu(char s[],char sN[]){
 	
 	int x; 
 	system("cls");
-	printf("\n\tTrabalho de MNC - Ciências da Computação");
-	printf("\n\tFunção atual escolhida: %s",s);
-	printf("\n\n\tEscolha o método a ser utilizado:\n");
-	printf("\n\t1 - Bisseção");
-	printf("\n\t2 - Posição Falsa"); 
-	printf("\n\t3 - Posição Falsa Modificada");
-	printf("\n\t4 - Newton");
-	printf("\n\t5 - Newton Modificado");
-	printf("\n\t6 - Derivada primeira");
-	printf("\n\t7 - Derivada segunda");
-	printf("\n\t8 - Jacobiano");
-	printf("\n\t9 - Hessiana");
-	printf("\n\t10 - Definir função");
-	printf("\n\t11- Sair do programa!");
+	printf("\n\tTrabalho de MNC - Ciências da Computação\n");
+	printf("\n\tFunção de uma variavel escolhida atualmente:      %s",s);
+	printf("\n\tFunção de duas variaveis escolhida atualmanete:   %s",sN);
+	printf("\n\n\tEscolha o método a ser utilizado (digite em decimal):\n");
+	printf("\n\t1  -  Bisseção");
+	printf("\n\t2  -  Posição Falsa"); 
+	printf("\n\t3  -  Posição Falsa Modificada");
+	printf("\n\t4  -  Newton");
+	printf("\n\t5  -  Newton Modificado");
+	printf("\n\t6  -  Derivada primeira");
+	printf("\n\t7  -  Derivada segunda");
+	printf("\n\t8  -  Jacobiano");
+	printf("\n\t9  -  Hessiana");
+	printf("\n\tA  -  Definir função de uma variável");
+	printf("\n\tB  -  Definir função de duas variáveis");
+	printf("\n\tC  -  Sair do programa!");
 	printf("\n\n\tOpção: ");
 	
 	do{			
-		gotoxy(17,19); 
+		gotoxy(17,22); 
 		printf("              "); 
-		gotoxy(17,19);
+		gotoxy(17,22);
 		scanf("%d",&x);
 		if(x <= 0 || x > 11){
-			gotoxy(1,24); 
+			gotoxy(1,26); 
 			printf("\n\tOpção Invalida! Digite novamente!"); 
 		}
 			
-	}while(x <= 0 || x > 11);
+	}while(x <= 0 || x > 12);
 	
-	gotoxy(1,24); 
+	gotoxy(1,26); 
 	printf("\n\t                                                 ");
-	gotoxy(1,20); 
+	gotoxy(1,23); 
 	return x; 
 }
-//Função somente pra printar 1 string (função)0
+//Função somente pra printar 1 string (função)
 void print_fx(char s[]){
 	printf("\n\n\tFunção utilizada: %s",s); 
 }
@@ -474,15 +543,6 @@ void tela(int op,char s[], float *e, int *iteracoes, float *lim_inf, float *lim_
 					break; 						
 	}
 }
-//Muda a string da função escolhida
-void defini_func (char s[]){	
-	if(global_func == 1)	
-		strcpy(s,"f(x) = x + 2cos(x)"); 
-	if(global_func == 2)
-		strcpy(s,"f(x) = x^3 - 4x^2 + x + 6");
-	if(global_func == 3)
-		strcpy(s,"f(x) = x^5 - (10/9)x^3 + (5/21)x");	
-}
 /****************************************************************************
 			IMPRESSÃO DOS RESULTADOS NA TELA PARA O USUARIO
 ****************************************************************************/
@@ -494,15 +554,21 @@ void mostra_resultado(int flag, float precisao, int max_ite, float a, float b, i
 	printf("\n\tPrecisão: %f",precisao); 
 	printf("\n\tNúmero maximo de iterações: %d",max_ite); 
 	printf("\n\tLimite Inferior: %.2f e Limite Superior: %.2f",a,b); 
-	if(flag == 0){
-		printf("\n\n\tNÃO HOUVE CONVERGÊNCIA NO RESULTADO!"); 
-		printf("\n\tNÚMERO MÁXIMO DE ITERAÇÕES ULTRAPASSADAS\n"); 
-	}
 	
-	printf("\n\n\tRESULTADOS OBTIDOS:\n"); 
-	printf("\n\tRaiz: %f\n\tNumero de iterações: %d\n\t",raiz,iteracoes);
-	printf("Numero arredondado para inteiro: %d\n\n\t", arredonda(raiz));
-
+	if(flag != -1)	{		
+		if(flag == 0){
+			printf("\n\n\tNÃO HOUVE CONVERGÊNCIA NO RESULTADO!"); 
+			printf("\n\tNÚMERO MÁXIMO DE ITERAÇÕES ULTRAPASSADAS\n"); 
+		}
+		
+		printf("\n\n\tRESULTADOS OBTIDOS:\n"); 
+		printf("\n\tRaiz: %f\n\tNumero de iterações: %d\n\t",raiz,iteracoes);
+		printf("Numero arredondado para inteiro: %d\n\n\t", arredonda(raiz));
+	}else {		
+		printf("\n\n\tMétodo não convergiu!"); 
+		printf("\n\tCálculo não efetuado..."); 
+		printf("\n\n\tPor favor tente novamente com um novo intervalo.\n\n\t");		
+	}
 }
 //Mostra os resultados de Newton e Newton modificado
 void mostra_resultado2(int flag, float precisao, int max_ite, float x0, int iteracoes, float raiz){
@@ -512,14 +578,21 @@ void mostra_resultado2(int flag, float precisao, int max_ite, float x0, int iter
 	printf("\n\tPrecisão: %f",precisao); 
 	printf("\n\tNúmero máximo de iterações: %d",max_ite); 
 	printf("\n\tValor de x0: %f",x0); 
-	if(flag == 0){
-		printf("\n\n\tNÃO HOUVE CONVERGÊNCIA NO RESULTADO!"); 
-		printf("\n\tNÚMERO MAXIMO DE ITERAÇÕES ULTRAPASSADAS\n"); 
+	if(flag != -1){
+		if(flag == 0){
+			printf("\n\n\tNÃO HOUVE CONVERGÊNCIA NO RESULTADO!"); 
+			printf("\n\tNÚMERO MAXIMO DE ITERAÇÕES ULTRAPASSADAS\n"); 
+		}
+		
+		printf("\n\n\tRESULTADOS OBTIDOS:\n"); 
+		printf("\n\tRaiz: %f\n\tNumero de iterações: %d\n\t",raiz,iteracoes);
+		printf("Numero arredondado para inteiro: %d\n\n\t", arredonda(raiz));
+	}else {
+		printf("\n\n\tCritério de convergência não atendido!"); 
+		printf("\n\tCálculo não foi efetuado!"); 
+		
+		printf("\n\n\tPor favor tente novamente com uma nova função!\n\n\t"); 
 	}
-	
-	printf("\n\n\tRESULTADOS OBTIDOS:\n"); 
-	printf("\n\tRaiz: %f\n\tNumero de iterações: %d\n\t",raiz,iteracoes);
-	printf("Numero arredondado para inteiro: %d\n\n\t", arredonda(raiz));
 
 }
 //Mostra o resultado da derivada primeira
@@ -542,20 +615,18 @@ int main(){
 	int ite_fim, aux;
 	float raiz, aux2, derivada1, derivada2; 
 	//String da função
-	char s_func[30]; 
+	char s_func[30], s_funcN[30]; 
 	
 	do{
 		defini_func(s_func);
-		op = menu(s_func); 
+		defini_funcN(s_funcN);
+		op = menu(s_func,s_funcN); 
 		ite_fim = 0; 
 		raiz = 0;
 		switch(op){
 			case 1: 	// MÉTODO DA BISSEÇÃO 	
-						tela(op,s_func,&pre,&ite,&l_inf,&l_sup);
-						//Chama o método da bisseção 
-						aux = bissecao(pre,ite,f,l_inf,l_sup,&ite_fim,&raiz);
-						
-						//Mostra o resultado de acordo com os dados digitados
+						tela(op,s_func,&pre,&ite,&l_inf,&l_sup);					
+						aux = bissecao(pre,ite,f,l_inf,l_sup,&ite_fim,&raiz); 	//Chama o método da bisseção 
 					    mostra_resultado(aux,pre,ite,l_inf,l_sup,ite_fim,raiz);	//Impressão do resultado na tela
 						system("pause");										//Espera o usuario apertar qualquer tecla						
 						break;
@@ -563,20 +634,17 @@ int main(){
 			case 2: 	//MÉTODO DA POSIÇÃO FALSA
 						tela(op,s_func,&pre,&ite,&l_inf,&l_sup);
 						aux = PosicaoFalsa(pre,ite,f,l_inf,l_sup,&ite_fim,&raiz);
-						
-						//Mostra o resultado de acordo com os dados digitados
 						mostra_resultado(aux,pre,ite,l_inf,l_sup,ite_fim,raiz);	//Impressão do resultado na tela
 						system("pause");					 //Espera o usuario apertar qualquer tecla
 						break; 
 						
-			case 3: 	//M?TODO DA POSIÇÃO FALSA MODIFICADA
+			case 3: 	//MÉTODO DA POSIÇÃO FALSA MODIFICADA
 						tela(op,s_func,&pre,&ite,&l_inf,&l_sup);
-						//Chama o m?todo da Posição Falsa Modificada
 						aux = PosicaoFalsaModificada(pre,ite,f,l_inf,l_sup,&ite_fim,&raiz);						
-						//Mostra o resultado de acordo com os dados digitados
 						mostra_resultado(aux,pre,ite,l_inf,l_sup,ite_fim,raiz);	//Impressão do resultado na tela
 						system("pause");
 						break; 
+						
 			case 4: 	//MÉTODO DE NEWTON
 						tela(op,s_func,&pre,&ite,&l_inf,&l_sup);
 						aux2 = l_inf; 
@@ -596,8 +664,6 @@ int main(){
 			case 6: 	//CÁLCULO DA DERIVADA
 						tela(op,s_func,&pre,&ite,&l_inf,&l_sup);
 						derivada1 = df(pre,ite,f,l_inf); 
-						//printf("Valor da derivada 1: %f",derivada1); 
-						//system("pause");
 						mostra_der(pre,ite,derivada1); 							//Impressão do resultado na tela
 						system("pause");
 						break; 
@@ -630,9 +696,12 @@ int main(){
 						}while(global_func < 1 || global_func > 3); 
 						printf("\n\tFunção Escolhida com sucesso!\n\t"); 
 						system("pause");
-						break; 					
+						break; 		
+			case 11: 	printf("oi"); 
+						system("pause");
+						break; 			
 		}
-	}while(op != 11);
+	}while(op != 12);
 	
 	printf("\n\n\tFim do programa!");
 }
