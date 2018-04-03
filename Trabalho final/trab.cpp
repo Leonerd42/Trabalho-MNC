@@ -628,14 +628,14 @@ int main(){
 						tela(op,s_func,&pre,&ite,&l_inf,&l_sup);					
 						aux = bissecao(pre,ite,f,l_inf,l_sup,&ite_fim,&raiz); 	//Chama o método da bisseção 
 					    mostra_resultado(aux,pre,ite,l_inf,l_sup,ite_fim,raiz);	//Impressão do resultado na tela
-						system("pause");										//Espera o usuario apertar qualquer tecla						
+						system("pause");																
 						break;
 						
 			case 2: 	//MÉTODO DA POSIÇÃO FALSA
 						tela(op,s_func,&pre,&ite,&l_inf,&l_sup);
 						aux = PosicaoFalsa(pre,ite,f,l_inf,l_sup,&ite_fim,&raiz);
 						mostra_resultado(aux,pre,ite,l_inf,l_sup,ite_fim,raiz);	//Impressão do resultado na tela
-						system("pause");					 //Espera o usuario apertar qualquer tecla
+						system("pause");					 
 						break; 
 						
 			case 3: 	//MÉTODO DA POSIÇÃO FALSA MODIFICADA
@@ -686,7 +686,7 @@ int main(){
 						break; 	
 						
 			case 10: 	system("cls"); 
-						printf("\n\tEscolha a função a ser computada:\n");
+						printf("\n\tEscolha a função de uma variavel a ser computada:\n");
 						printf("\n\t1 - f(x) = x + 2cos(x)"); 
 						printf("\n\t2 - f(x) = x^3 - 4x^2 + x + 6"); 
 						printf("\n\t3 - f(x) = x^5 - (10/9)x^3 + (5/21)x");
@@ -697,7 +697,17 @@ int main(){
 						printf("\n\tFunção Escolhida com sucesso!\n\t"); 
 						system("pause");
 						break; 		
-			case 11: 	printf("oi"); 
+						
+			case 11: 	system("cls"); 
+						printf("\n\tEscolha a função de mais de uma variavel a ser computada:\n");
+						printf("\n\t1 - oi"); 
+						printf("\n\t2 - tudo bom? "); 
+						printf("\n\t3 - comé q sé ta?");
+						printf("\n\n\tOpção: ");
+						do{
+							scanf("%d",&global_funcN); 
+						}while(global_funcN < 1 || global_funcN > 3); 
+						printf("\n\tFunção Escolhida com sucesso!\n\t"); 
 						system("pause");
 						break; 			
 		}
