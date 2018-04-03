@@ -5,8 +5,6 @@
 //			Leonardo Silva de Oliveira
 //			Renan Scatolino Mesquita
 
-// PRECISA MODIFICAR AS ROTINAS DE NEWTON E NEWTON MODIFICADO
-
 #include <math.h>
 #include <stdio.h>
 #include <conio.h>
@@ -571,9 +569,9 @@ int main(){
 						system("pause");					 //Espera o usuario apertar qualquer tecla
 						break; 
 						
-			case 3: 	//M?TODO DA POSI??O FALSA MODIFICADA
+			case 3: 	//M?TODO DA POSIÇÃO FALSA MODIFICADA
 						tela(op,s_func,&pre,&ite,&l_inf,&l_sup);
-						//Chama o m?todo da Posi??o Falsa Modificada
+						//Chama o m?todo da Posição Falsa Modificada
 						aux = PosicaoFalsaModificada(pre,ite,f,l_inf,l_sup,&ite_fim,&raiz);						
 						//Mostra o resultado de acordo com os dados digitados
 						mostra_resultado(aux,pre,ite,l_inf,l_sup,ite_fim,raiz);	//Impressão do resultado na tela
