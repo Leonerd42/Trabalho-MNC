@@ -15,7 +15,7 @@ float modulo(float x){		//FUNÇÃO PARA RETORNAR O MODULO DE UM VALOR
 }
 //Função para começar a implementar 
 float f(float x1,float x2){
-	return ((2*x1*x1*x1) - (3*x2*x2) - (x1*x1*x2));
+	return ((2*x1*x1*x1) - (3*x2*x2) - (x1*x1*x2));			//Funçao do exercicio 
 }
 float J_x1(float x1, float x2,float h){
 	return (f(x1 + (2*h), x2) - (2 * f(x1,x2)) + f(x1 - (2*h), x2))/(4*h*h);

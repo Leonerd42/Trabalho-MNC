@@ -31,7 +31,7 @@ void gotoxy(int x, int y){
 // -----------------    Funções polinomiais e trigonometricas
 float f(float x){	
 	if(global_func == 1)	return (x + 2*cos(x)); 
-	if(global_func == 2)	return (0); //return (pow(x,3) - 4*(pow(x,2)) + x + 6);
+	if(global_func == 2)	return (pow(x,3) - 4*(pow(x,2)) + x + 6);
 	if(global_func == 3)	return (pow(x,5) - (10/9)*pow(x,3) + (5/21)*x);	
 	//return pow(sin(x),2);
 }
