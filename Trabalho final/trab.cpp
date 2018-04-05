@@ -15,7 +15,8 @@
 #include <windows.h>
 
 int global_func = 2; 	//Variavel global para selecionar a função de opção do usuario
-int global_funcN = 1; 
+int aux_global = 1; 
+int vetor_global[3] = {0,0,0};
 
 //Rotina para posicionar o curso na tela
 void gotoxy(int x, int y){
@@ -45,8 +46,13 @@ void defini_func (char s[]){
 		strcpy(s,"f(x) = x^5 - (10/9)x^3 + (5/21)x");	
 }
 // -----------------    Funções de mais de uma variaveis (max 3)
-float fN(float x1, float x2, float x3){
-	
+float fN(float x, float y, float z){
+	if(aux_global == 1)
+		return (3*x + 2*x*y + y*y);	
+	if(aux_global == 2)
+		return (2*pow(x,3) - 3*pow(y,2) + z*x*y);	
+	if(aux_global == 3)
+		return (3*z + 2*x*y + y*y);	
 }
 // -----------------    Muda a string da função de mais de uma variavel escolhida
 void defini_funcN (char sN[]){	
@@ -89,9 +95,37 @@ float max(float x){
 	else return 1.0; 
 }
 //Arredonda o valor
-int arredonda(double number){
-	
+int arredonda(double number){	
     return (number >= 0) ? (int)(number + 0.5) : (int)(number - 0.5);
+}
+
+float parcial (float x, float y, float z, float h[]){
+	return ((fN(x + h[0],y + h[1],z + h[2]) - fN(x - h[0],y - h[1],z - h[2]))/(2*(h[0]+h[1]+h[2])));  
+}
+void gradiente (int qtd, float v[], float grad[]){
+	
+	float h[3] = {0,0,0}, der_ant, erro, erro_ant;  
+	int cont = 0; 
+	
+	for (int i=0; i < qtd; i++){
+		h[i] = 1; 
+		cont = 0; 
+		while(true){
+			cont++; 
+			grad[i] = parcial(v[0],v[1],v[2],h);
+			if(cont >= 2){
+				erro = modulo (grad[i] - der_ant) / max(grad[i]); 
+				if(erro < 0.001) break;
+				
+				if(cont > 2)
+					if(erro > erro_ant) break; 
+				erro_ant = erro; 
+			}			
+			der_ant = grad[i]; 
+			h[i] = h[i] / 2; 
+		}
+		h[i] = 0; 			
+	}	
 }
 /*******************************************************************************
 							DIFERENCIAÇÃO NUMÉRICA
@@ -158,8 +192,17 @@ float df2(float pre, int max_ite, float func(float v), float x){
 	return fx_ant;
 }
 //Procedimento Jacobiano
-void Jacobiano(int vetor_X, int num_equacoes, float funcN(float v), int v[], int jaco[10][10]){
+void Jacobiano (int qtd, int qq, float v[], float ja[][3]){
 	
+	for(int i = 0; i < qtd; i++){
+			
+	if(vetor_global[i] == 0)
+			continue; 
+	aux_global = i+1; 		
+	gradiente(qtd,v,ja[i]); 
+	}
+	
+	aux_global = 0; 
 }
 //Procedimento Hessiana
 void Hessiana(int vetor_x, float funcN(float v), int v[], int hess[][10]){
@@ -439,8 +482,8 @@ int menu(char s[],char sN[]){
 	printf("\n\tFunção de duas variaveis escolhida atualmanete:   %s",sN);
 	printf("\n\n\tEscolha o método a ser utilizado (digite em decimal):\n");
 	printf("\n\t1  -  Bisseção");
-	printf("\n\t2  -  Posição Falsa"); 
-	printf("\n\t3  -  Posição Falsa Modificada");
+	printf("\n\t2  -  Posição Falsa (cordas)"); 
+	printf("\n\t3  -  Posição Falsa Modificada (cordas modificado)");
 	printf("\n\t4  -  Newton");
 	printf("\n\t5  -  Newton Modificado");
 	printf("\n\t6  -  Derivada primeira");
@@ -605,6 +648,15 @@ void mostra_der(float precisao, int max_ite, float x){
 	printf("\n\n\tValor da derivada: %f",x); 
 	printf("\n\t"); 	
 }
+
+void printa_matriz (float v[][3],int n){
+	for(int i = 0; i < n; i++){
+		printf("\n"); 
+		for(int j = 0; j < n; j++)
+			printf("   %f    ",v[i][j]);
+	}
+	
+}
 // Função main
 int main(){
 
@@ -699,15 +751,46 @@ int main(){
 						break; 		
 						
 			case 11: 	system("cls"); 
+						int cont = 0, x, max_x = 2; 
+						float valores_x[3], jaco[3][3];
+						
 						printf("\n\tEscolha a função de mais de uma variavel a ser computada:\n");
-						printf("\n\t1 - oi"); 
-						printf("\n\t2 - tudo bom? "); 
-						printf("\n\t3 - comé q sé ta?");
+						printf("\n\t1 - f(x,y,z) = 3x + 2xy + y^2"); 
+						printf("\n\t2 - f(x,y,z) = 2x^3 - 3y^2 + zxy"); //(2*pow(x,3) - 3*pow(y,2) + z*x*y);	
+						printf("\n\t3 - f(x,y,z) = 3z + 2xy + y^2");	//(3*z + 2*x*y + y*y);	
 						printf("\n\n\tOpção: ");
 						do{
-							scanf("%d",&global_funcN); 
-						}while(global_funcN < 1 || global_funcN > 3); 
-						printf("\n\tFunção Escolhida com sucesso!\n\t"); 
+							gotoxy(17,8);
+							printf("   "); 
+							gotoxy(17,8);
+							scanf("%d",&x);
+							if(x >= 1 && x <= 3){
+								if(vetor_global[x-1] != 1){
+									if(x == 2 || x == 3)
+										max_x = 3; 
+									gotoxy(50,12+cont); 
+									printf("\n\tFuncão %d selecionada!",x);
+									vetor_global[x-1] = 1; 
+									cont++; 
+								}			
+							} 
+						}while(x != -1 && cont < 3); 
+						
+						system("cls"); 
+						
+						printf("\n\n\tDigite os valores de x\n "); 
+						for(int i=0; i<max_x; i++){
+							printf("\tx%d: ",i+1); 
+							scanf("%f",&valores_x[i]);
+						}
+						
+						Jacobiano (cont,0,valores_x,jaco);						
+						printa_matriz(jaco,3);
+						
+						for(int i=0; i<3; i++)
+							vetor_global[i] = 0; 
+
+						printf("\n\t");
 						system("pause");
 						break; 			
 		}
