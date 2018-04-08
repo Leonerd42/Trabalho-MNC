@@ -46,7 +46,7 @@ void defini_func (char s[]){
 	if(global_func == 3)
 		strcpy(s,"f(x) = x^5 - (10/9)x^3 + (5/21)x");	
 }
-// -----------------    Funções de mais de uma variaveis (max 3)
+// -----------------    Funções de mais de uma variaveis (max 3) - Para Jacobiana
 float fN(float x, float y, float z){
 	if(aux_global == 1)
 		return (3*x + 2*x*y + y*y);	
@@ -61,10 +61,7 @@ float fHess(float x1,float x2, float x3){
 	else return ((x1*x1) + (x2*x2) + (x3*x3*x3) - (7*x1*x2) + (5*x1) - (3*x3*x2*x2));// + exp(x2*x3*x1)); //AAAAAAAAAAAAAAQUIIIIIIIIIIIIIIIIIIIIIIII
 //
 }
-// -----------------    Muda a string da função de mais de uma variavel escolhida
-void defini_funcN (char sN[]){	
-	strcpy(sN,"f(x) = x1^2 + 2*x1*x2 + x2^3");
-}
+
 /******************************************************************************
 					ROTINAS DE CÁLCULOS MATEMÁTICOS SIMPLES
 *******************************************************************************/
@@ -105,11 +102,11 @@ float max(float x){
 int arredonda(double number){	
     return (number >= 0) ? (int)(number + 0.5) : (int)(number - 0.5);
 }
-
+//Função para calcular a derivada parcial de uma função
 float parcial (float x, float y, float z, float h[]){
 	return ((fN(x + h[0],y + h[1],z + h[2]) - fN(x - h[0],y - h[1],z - h[2]))/(2*(h[0]+h[1]+h[2])));  
 }
-
+//Essa função calcula o gradiente de uma função 
 void gradiente (int qtd, float v[], float grad[]){
 	
 	float h[3] = {0,0,0}, der_ant, erro, erro_ant;  
@@ -135,7 +132,7 @@ void gradiente (int qtd, float v[], float grad[]){
 		h[i] = 0; 			
 	}	
 }
-
+//Calcula a derivada segunda de acordo com i e j 
 float ParcialHess( float x[], float h, int i, int j){ // colocar qual fn vai trabalhar****************OBS IMPORTANTE LEOOOO OLHA AQUI!!!
 	float soma=0,vet[4];
 	vet[1] = x[1];
@@ -272,34 +269,35 @@ void Jacobiano (int qtd, int qq, float v[], float ja[][3]){
 	}
 }
 //Procedimento Hessiana
- int Hessiana(float pre, int ite_max, int *ite_fi, float *h,float x[], float JACO[][3], int n){ // ===================== aqui 
+void Hessiana(int n, float x[],float HESS[][4])  { // ===================== aqui 
+	float pre = 0.01, h=1;
+	int ite_max = 50, ite_fi = 0;
 	float fx, fx_ant, erro;
 	int ver,aux;
 	for(int i=0; i<n; i++){
 		for(int j=0; j<n; j++){
-			ver = (*ite_fi) = 0;
-			while(*ite_fi != ite_max && ver == 0){
+			ver = (ite_fi) = 0;
+			while(ite_fi != ite_max && ver == 0){
 				fx_ant = fx;
-				fx = ParcialHess(x,*h,i+1,j+1);
-				//printf("\nValor de fx: %f",fx);
+			//	if (i=2 && j==2) printf("%d", h);
+				fx = ParcialHess(x,h,i+1,j+1);
 				//printf("---<<>>>%d,%d>>>%.4f<<<---\n",i+1,j+1,fx);
 				//
-				if(*ite_fi > 0){ // calculo das condiçoes de parada
+				if(ite_fi > 0){ // calculo das condiçoes de parada
 					if(modulo(fx) > 1) erro  = modulo((fx - fx_ant)/fx); 
-					else erro  = modulo(fx - fx_ant)/1;  
+					else erro  = modulo((fx - fx_ant)/1);  
 					if(erro < pre){
-					//	if(i == 2 && j == 2)	//printf("\nAQUI FX: %f",fx); 
-						JACO[i][j] = fx;
+						HESS[i][j] = fx;
 						ver = 1;
 					}
 				}
-				*h = (*h)/2;
-				(*ite_fi)++;
-				if(*ite_fi == ite_max) return 0;//============alterar aqui // ultrapassou o limite de interações
+				h = (h)/2;
+				(ite_fi)++;
+				if(ite_fi == ite_max) return ;//============alterar aqui // ultrapassou o limite de interações
 			}		
 		}
 	}
-	return 1;
+	return ;
 }
 /******************************************************************************
 						CÁLCULO DOS ZEROS DE FUNÇÕES
@@ -566,7 +564,7 @@ void coleta_dados_der(float *precisao, int *max_ite, float *x){
 					ROTINAS DA INTERFACE COM O USUARIO
 *****************************************************************************/
 //Função para mostrar o menu principal para o usuario
-int menu(char s[],char sN[]){
+int menu(char s[]){
 	
 	int x; 
 	system("cls");
@@ -741,7 +739,7 @@ void mostra_der(float precisao, int max_ite, float x){
 	printf("\n\n\tValor da derivada: %f",x); 
 	printf("\n\t"); 	
 }
-
+// Funçao para imprimir uma matriz
 void printa_matriz (float v[][3],int n){
 	for(int i = 0; i < n; i++){		
 		for(int j = 0; j < n; j++)
@@ -760,65 +758,64 @@ int main(){
 	int ite_fim, aux;
 	float raiz, aux2, derivada1, derivada2; 
 	//String da função
-	char s_func[30], s_funcN[30]; 
+	char s_func[30]; 
 	
 	do{
 		defini_func(s_func);
-		defini_funcN(s_funcN);
-		op = menu(s_func,s_funcN); 
+		op = menu(s_func); 
 		ite_fim = 0; 
 		raiz = 0;
 		switch(op){
 			case 1: 	// MÉTODO DA BISSEÇÃO 	
-						tela(op,s_func,&pre,&ite,&l_inf,&l_sup);					
+						{tela(op,s_func,&pre,&ite,&l_inf,&l_sup);					
 						aux = bissecao(pre,ite,f,l_inf,l_sup,&ite_fim,&raiz); 	//Chama o método da bisseção 
 					    mostra_resultado(aux,pre,ite,l_inf,l_sup,ite_fim,raiz);	//Impressão do resultado na tela
 						system("pause");																
-						break;
+						break;}
 						
 			case 2: 	//MÉTODO DA POSIÇÃO FALSA
-						tela(op,s_func,&pre,&ite,&l_inf,&l_sup);
+						{tela(op,s_func,&pre,&ite,&l_inf,&l_sup);
 						aux = PosicaoFalsa(pre,ite,f,l_inf,l_sup,&ite_fim,&raiz);
 						mostra_resultado(aux,pre,ite,l_inf,l_sup,ite_fim,raiz);	//Impressão do resultado na tela
 						system("pause");					 
-						break; 
+						break; }
 						
 			case 3: 	//MÉTODO DA POSIÇÃO FALSA MODIFICADA
-						tela(op,s_func,&pre,&ite,&l_inf,&l_sup);
+						{tela(op,s_func,&pre,&ite,&l_inf,&l_sup);
 						aux = PosicaoFalsaModificada(pre,ite,f,l_inf,l_sup,&ite_fim,&raiz);						
 						mostra_resultado(aux,pre,ite,l_inf,l_sup,ite_fim,raiz);	//Impressão do resultado na tela
 						system("pause");
-						break; 
+						break; }
 						
 			case 4: 	//MÉTODO DE NEWTON
-						tela(op,s_func,&pre,&ite,&l_inf,&l_sup);
+						{tela(op,s_func,&pre,&ite,&l_inf,&l_sup);
 						aux2 = l_inf; 
 						aux = Newton(pre,ite,f,&l_inf,&ite_fim,&raiz);
 						mostra_resultado2(aux,pre,ite,aux2,ite_fim,raiz);		//Impressão do resultado na tela
 						system("pause");
-						break; 
+						break;  }
 						
 			case 5: 	//MÉTODO DE NEWTON MODIFICADO
-						tela(op,s_func,&pre,&ite,&l_inf,&l_sup); 
+						{tela(op,s_func,&pre,&ite,&l_inf,&l_sup); 
 						aux2 = l_inf; 
 						aux = NewtonModificado(pre,ite,f,&l_inf,&ite_fim,&raiz); 
 						mostra_resultado2(aux,pre,ite,aux2,ite_fim,raiz); 		//Impressão do resultado na tela
 						system("pause");
-						break;
+						break;  }
 						
 			case 6: 	//CÁLCULO DA DERIVADA
-						tela(op,s_func,&pre,&ite,&l_inf,&l_sup);
+						{tela(op,s_func,&pre,&ite,&l_inf,&l_sup);
 						derivada1 = df(pre,ite,f,l_inf); 
 						mostra_der(pre,ite,derivada1); 							//Impressão do resultado na tela
 						system("pause");
-						break; 
+						break; }
 						
 			case 7: 	//CÁLCULO DA DERIVADA SEGUNDA
-						tela(op,s_func,&pre,&ite,&l_inf,&l_sup); 
+						{tela(op,s_func,&pre,&ite,&l_inf,&l_sup); 
 						derivada2 = df2(pre,ite,f,l_inf); 
 						mostra_der(pre,ite,derivada2); 							//Impressão do resultado na tela
 						system("pause"); 
-						break; 
+						break; }
 						
 			case 8: 	//CÁLCULO DA MATRIZ JACOBIANA
 						{system("cls"); 
@@ -876,12 +873,13 @@ int main(){
 						{
 						system("cls"); 
 						printf("\n\n\tCálculo da Matriz Hessiana!"); 
-						float pre_1, x_1[4], h_1 = 1,hess_1[3][3];
+						float pre_1, x_1[4], h_1 = 1,hess_1[4][4];
 						int iteracoes_1, max_ite_1 = 40, n; 
 						
+						//Mostra as funções que podem ser escolhidas para serem calculadas
 						printf("\n\tEscolha a função: \n"); 
-						printf("\n\t1 - f(x) = 2*x1^3 - 3*x2^2 - x1^2*x2"); 					//((2*x1*x1*x1) - (3*x2*x2) - (x1*x1*x2));
-						printf("\n\t2 - f(x) = x1^2 + x2^2 + x3^3 - 7*x1*x2 + 5*x1 - 3*x3*x2^2"); //(7*x1*x2) + (5*x1) - (3*x3*x2*x2));
+						printf("\n\t1 - f(x) = 2*x1^3 - 3*x2^2 - x1^2*x2"); 					
+						printf("\n\t2 - f(x) = x1^2 + x2^2 + x3^3 - 7*x1*x2 + 5*x1 - 3*x3*x2^2"); 
 						printf("\n\n\tOpção: "); 
 						do{
 							scanf("%d",&f_hessiana); 
@@ -892,21 +890,30 @@ int main(){
 						else n = 2; 						
 												
 						printf("\n\tDigite a precisão: "); 
-						scanf("%f",&pre_1);
+						do{
+							scanf("%f",&pre_1);
+						}while(pre_1 <= 0); 
 						
 						printf("\tDigite os valores de x\n");
 						fflush(stdin);
-						for(int i=1; i<n+1;i++)						{
+						for(int i=1; i<=n;i++)						{
 							printf("\tValor de x%d : ",i);
 							scanf("%f",&x_1[i]);
 						}
 							
-						Hessiana(pre_1,max_ite_1,&iteracoes_1,&h_1,x_1,hess_1,n);
+						printf("\n\tValores de x: "); 
+						for(int i=0; i<n; i++)
+							printf("\n\tValor de x: %f",x_1[i+1]);
+						
+						Hessiana(n,x_1,hess_1);
 						printf("\n\tH(x) = \n\t"); 
-						printa_matriz(hess_1,n);
+						//printa_matriz(hess_1,n);
+						for(int i =0; i<n; i++){
+							for(int j=0; j<n; j++) printf("----->>> %.7f <<<<\t",hess_1[i][j]);
+							printf("\n");
+						}
 						
-						printf("\n\tMatriz Hessiana Impressa!\n\t");
-						
+						printf("\n\tMatriz Hessiana Impressa!\n\t");						
 						system("pause"); 
 						break; 	}
 						
