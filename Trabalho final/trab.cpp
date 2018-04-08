@@ -14,10 +14,10 @@
 #include <locale.h>
 #include <windows.h>
 
-int global_func = 2; 	//Variavel global para selecionar a função de opção do usuario
-int aux_global = 1; 
-int f_hessiana = 1; 
-int vetor_global[3] = {0,0,0};
+int global_func = 1; 	//Variavel global para selecionar a função de opção do usuario
+int aux_global = 1; 	//Variavel global da jacobiana
+int f_hessiana = 1; 	//Variavel global da hessiana 
+int vetor_global[3] = {0,0,0};	//Vetor global da jacobiana
 
 //Rotina para posicionar o curso na tela
 void gotoxy(int x, int y){
@@ -30,7 +30,7 @@ void gotoxy(int x, int y){
 //global_func e global_funcN... Essa funções são chamadas durante a execução dos
 //métodos, logo alterando essas funções, fará com que os métodos trabalhem com 
 //a função alterada
-// -----------------    Funções polinomiais e trigonometricas
+// -----------------    Funções polinomiais e trigonometricas - Cálculo dos zeros de funções 
 float f(float x){	
 	if(global_func == 1)	return (x + 2*cos(x)); 
 	if(global_func == 2)	return (pow(x,3) - 4*(pow(x,2)) + x + 6);
@@ -58,12 +58,12 @@ float fN(float x, float y, float z){
 // -----------------    Funções para Calcular a hessiana
 float fHess(float x1,float x2, float x3){
 	if(f_hessiana == 1) return ((2*x1*x1*x1) - (3*x2*x2) - (x1*x1*x2));
-	else return ((x1*x1) + (x2*x2) + (x3*x3*x3) - (7*x1*x2) + (5*x1) - (3*x3*x2*x2));// + exp(x2*x3*x1)); //AAAAAAAAAAAAAAQUIIIIIIIIIIIIIIIIIIIIIIII
-//
+	else if(f_hessiana == 2) return ((x1*x1) + (x2*x2) + (x3*x3) - (7*x1*x2) + (5*x1) - (3*x3));// + exp(x2*x3*x1)); //AAAAAAAAAAAAAAQUIIIIIIIIIIIIIIIIIIIIIIII
+		else return (pow(x1,4)*x2*x3 + pow(x2,5)*x3*x1 + x2*pow(x3,4)*x1);
 }
 
 /******************************************************************************
-					ROTINAS DE CÁLCULOS MATEMÁTICOS SIMPLES
+						ROTINAS DE CÁLCULOS MATEMÁTICOS
 *******************************************************************************/
 //Função para verificar a convergência
 int conve(float a,float b, float func (float v)){						
@@ -139,7 +139,7 @@ float ParcialHess( float x[], float h, int i, int j){ // colocar qual fn vai tra
 	vet[2] = x[2];
 	vet[3] = x[3];
 	
-	if (i==j){	
+	if (i==j){			//Caso i e j forem iguais a formula é diferente se i != j 
 		soma = (-2)*fHess(vet[1], vet[2], vet[3]);
 		vet[i] = vet[i]+2*h;	
 		soma=soma+fHess(vet[1],vet[2], vet[3]);	
@@ -272,17 +272,16 @@ void Jacobiano (int qtd, int qq, float v[], float ja[][3]){
 void Hessiana(int n, float x[],float HESS[][4])  { // ===================== aqui 
 	float pre = 0.01, h=1;
 	int ite_max = 50, ite_fi = 0;
-	float fx, fx_ant, erro;
+	float fx, fx_ant, erro, erro_ant; 
 	int ver,aux;
 	for(int i=0; i<n; i++){
 		for(int j=0; j<n; j++){
 			ver = (ite_fi) = 0;
+			h = 1; 					//Reseta o valor de h
 			while(ite_fi != ite_max && ver == 0){
 				fx_ant = fx;
-			//	if (i=2 && j==2) printf("%d", h);
+		
 				fx = ParcialHess(x,h,i+1,j+1);
-				//printf("---<<>>>%d,%d>>>%.4f<<<---\n",i+1,j+1,fx);
-				//
 				if(ite_fi > 0){ // calculo das condiçoes de parada
 					if(modulo(fx) > 1) erro  = modulo((fx - fx_ant)/fx); 
 					else erro  = modulo((fx - fx_ant)/1);  
@@ -290,10 +289,15 @@ void Hessiana(int n, float x[],float HESS[][4])  { // ===================== aqui
 						HESS[i][j] = fx;
 						ver = 1;
 					}
+					if(ite_fi > 1){
+						if(erro > erro_ant)		//Se o erro anterior for menor que o atual retorna o valor anterior da derivada
+							HESS[i][j] = fx_ant; 
+					}
+					erro_ant = erro; 
 				}
 				h = (h)/2;
 				(ite_fi)++;
-				if(ite_fi == ite_max) return ;//============alterar aqui // ultrapassou o limite de interações
+				if(ite_fi >= ite_max) return ;//============alterar aqui // ultrapassou o limite de interações
 			}		
 		}
 	}
@@ -662,19 +666,7 @@ void tela(int op,char s[], float *e, int *iteracoes, float *lim_inf, float *lim_
 					coleta_dados_der(&(*e),&(*iteracoes),&(*lim_inf)); 
 					printf("\n\t"); 
 					system("pause");
-					break; 
-		case 8: 	printf("Cálculo da matriz Jacobiana!"); 
-					print_fx(s);
-					printf("\n\n\t\t\tAinda em desenvolvimento!!!"); 
-					printf("\n\t"); 
-					//system("pause"); 
-					break; 
-		case 9: 	printf("Cálculo da matriz Hessiana!"); 
-					print_fx(s); 
-					printf("\n\n\t\t\tAinda em desenvolvimento!!!"); 
-					printf("\n\t"); 
-					//system("pause"); 
-					break; 						
+					break; 					
 	}
 }
 /****************************************************************************
@@ -832,10 +824,10 @@ int main(){
 							printf("   "); 
 							gotoxy(17,8);
 							scanf("%d",&x);
-							if(x >= 1 && x <= 3){
-								if(vetor_global[x-1] != 1){
-									if(x == 2 || x == 3)
-										max_x = 3; 
+							if(x >= 1 && x <= 3){					//Opção para selecionar as funções que 
+								if(vetor_global[x-1] != 1){			//Terá na matriz jacobiana
+									if(x == 2 || x == 3)			//Cada funçao em uma linha
+										max_x = 3; 					//(Gradiente transposto) 
 									gotoxy(50,12+cont); 
 									printf("\n\tFuncão %d selecionada!",x);
 									vetor_global[x-1] = 1; 
@@ -846,7 +838,7 @@ int main(){
 						
 						system("cls"); 
 						
-						printf("\n\n\tDigite os valores de x\n "); 
+						printf("\n\n\tDigite os valores de x\n "); 		//Coletando os valores de x
 						fflush(stdin); 
 						for(int i=0; i<max_x; i++){
 							printf("\tx%d: ",i+1); 
@@ -870,8 +862,7 @@ int main(){
 						break;}
 						
 			case 9: 	//CÁLCULO DA MATRIZ HESSIANA
-						{
-						system("cls"); 
+						{system("cls"); 
 						printf("\n\n\tCálculo da Matriz Hessiana!"); 
 						float pre_1, x_1[4], h_1 = 1,hess_1[4][4];
 						int iteracoes_1, max_ite_1 = 40, n; 
@@ -879,45 +870,40 @@ int main(){
 						//Mostra as funções que podem ser escolhidas para serem calculadas
 						printf("\n\tEscolha a função: \n"); 
 						printf("\n\t1 - f(x) = 2*x1^3 - 3*x2^2 - x1^2*x2"); 					
-						printf("\n\t2 - f(x) = x1^2 + x2^2 + x3^3 - 7*x1*x2 + 5*x1 - 3*x3*x2^2"); 
+						printf("\n\t2 - f(x) = x1^2 + x2^2 + x3^3 - 7*x1*x2 + 5*x1 - 3*x3"); //7*x1*x2) + (5*x1) - (3*x3));
+						printf("\n\t3 - f(x) = x1^4*x2*x3 + x2^5*x3*x1 + x2*x3^4*x1");
 						printf("\n\n\tOpção: "); 
 						do{
-							scanf("%d",&f_hessiana); 
-						}while(f_hessiana < 1 || f_hessiana > 2); 
+							scanf("%d",&f_hessiana); 					//Defini a função usada pela hessiana 
+						}while(f_hessiana < 1 || f_hessiana > 3); 
 						
-						if(f_hessiana == 2)
-							n = 3; 
-						else n = 2; 						
-												
-						printf("\n\tDigite a precisão: "); 
-						do{
-							scanf("%f",&pre_1);
-						}while(pre_1 <= 0); 
+						if(f_hessiana == 1) n = 2; 				    //Determinando o numero de variaveis 
+						else n = 3; 							
 						
-						printf("\tDigite os valores de x\n");
+						printf("\n\tDigite os valores de x\n");		//Coletando os valores de x
 						fflush(stdin);
-						for(int i=1; i<=n;i++)						{
+						for(int i=1; i<=n;i++)	{
 							printf("\tValor de x%d : ",i);
 							scanf("%f",&x_1[i]);
 						}
 							
 						printf("\n\tValores de x: "); 
 						for(int i=0; i<n; i++)
-							printf("\n\tValor de x: %f",x_1[i+1]);
+							printf("  %d: %f   ",i+1,x_1[i+1]);
 						
-						Hessiana(n,x_1,hess_1);
-						printf("\n\tH(x) = \n\t"); 
-						//printa_matriz(hess_1,n);
-						for(int i =0; i<n; i++){
-							for(int j=0; j<n; j++) printf("----->>> %.7f <<<<\t",hess_1[i][j]);
-							printf("\n");
+						Hessiana(n,x_1,hess_1);				//FunçãoN não foi passado como parametro pq já está sendo usado
+						printf("\n\tH(x) = \n\t"); 			//Dentro da rotina
+						for(int i =0; i<n; i++){			//Impressão do resultado 
+							for(int j=0; j<n; j++) printf("   %.7f   ",hess_1[i][j]);
+							printf("\n\t");
 						}
 						
 						printf("\n\tMatriz Hessiana Impressa!\n\t");						
 						system("pause"); 
 						break; 	}
 						
-			case 10: 	system("cls"); 
+						//OPÇÃO PARA ALTERAR A FUNÇÃO DOS CÁLCULOS DE ZERO DE FUNÇÃO
+			case 10: 	{system("cls"); 
 						printf("\n\tEscolha a função de uma variavel a ser computada:\n");
 						printf("\n\t1 - f(x) = x + 2cos(x)"); 
 						printf("\n\t2 - f(x) = x^3 - 4x^2 + x + 6"); 
@@ -928,12 +914,10 @@ int main(){
 						}while(global_func < 1 || global_func > 3); 
 						printf("\n\tFunção Escolhida com sucesso!\n\t"); 
 						system("pause");
-						break; 		
-						
-		//	case 11: 	 			
+						break; 	}	 	 			
 		}
 	}while(op != 11);
 	
 	printf("\n\n\tFim do programa!");
 }
-
+//
