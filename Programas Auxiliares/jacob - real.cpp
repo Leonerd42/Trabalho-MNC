@@ -10,7 +10,7 @@
 int vetor_global[3] = {0,0,0}; 
 int aux_global = 0; 
 
-float f(float x, float y, float z){
+float fN(float x, float y, float z){
 	if(aux_global == 1)
 		return (3*x + 2*x*y + y*y);	
 	if(aux_global == 2)
@@ -38,8 +38,7 @@ float max (float x){
 
 void gradiente (int qtd, float v[], float grad[]){
 	
-	float h[3] = {0,0,0}; 
-	float der_ant, erro, erro_ant;  
+	float h[3] = {0,0,0}, der_ant, erro, erro_ant;  
 	int cont = 0; 
 	
 	for (int i=0; i < qtd; i++){
@@ -48,20 +47,14 @@ void gradiente (int qtd, float v[], float grad[]){
 		while(true){
 			cont++; 
 			grad[i] = parcial(v[0],v[1],v[2],h);
-			//printf("\nDerivada: %f\n",grad[i]);
-			//system("pause");
 			if(cont >= 2){
 				erro = modulo (grad[i] - der_ant) / max(grad[i]); 
-				if(erro < 0.001)
-					break;
+				if(erro < 0.001) break;
 				
-				if(cont > 2){
-					if(erro > erro_ant)
-						break; 
-				}
+				if(cont > 2)
+					if(erro > erro_ant) break; 
 				erro_ant = erro; 
-			}
-			
+			}			
 			der_ant = grad[i]; 
 			h[i] = h[i] / 2; 
 		}

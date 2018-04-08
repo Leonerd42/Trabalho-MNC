@@ -16,6 +16,7 @@
 
 int global_func = 2; 	//Variavel global para selecionar a função de opção do usuario
 int aux_global = 1; 
+int f_hessiana = 1; 
 int vetor_global[3] = {0,0,0};
 
 //Rotina para posicionar o curso na tela
@@ -53,6 +54,12 @@ float fN(float x, float y, float z){
 		return (2*pow(x,3) - 3*pow(y,2) + z*x*y);	
 	if(aux_global == 3)
 		return (3*z + 2*x*y + y*y);	
+}
+// -----------------    Funções para Calcular a hessiana
+float fHess(float x1,float x2, float x3){
+	if(f_hessiana == 1) return ((2*x1*x1*x1) - (3*x2*x2) - (x1*x1*x2));
+	else return ((x1*x1) + (x2*x2) + (x3*x3*x3) - (7*x1*x2) + (5*x1) - (3*x3*x2*x2));// + exp(x2*x3*x1)); //AAAAAAAAAAAAAAQUIIIIIIIIIIIIIIIIIIIIIIII
+//
 }
 // -----------------    Muda a string da função de mais de uma variavel escolhida
 void defini_funcN (char sN[]){	
@@ -102,6 +109,7 @@ int arredonda(double number){
 float parcial (float x, float y, float z, float h[]){
 	return ((fN(x + h[0],y + h[1],z + h[2]) - fN(x - h[0],y - h[1],z - h[2]))/(2*(h[0]+h[1]+h[2])));  
 }
+
 void gradiente (int qtd, float v[], float grad[]){
 	
 	float h[3] = {0,0,0}, der_ant, erro, erro_ant;  
@@ -126,6 +134,38 @@ void gradiente (int qtd, float v[], float grad[]){
 		}
 		h[i] = 0; 			
 	}	
+}
+
+float ParcialHess( float x[], float h, int i, int j){ // colocar qual fn vai trabalhar****************OBS IMPORTANTE LEOOOO OLHA AQUI!!!
+	float soma=0,vet[4];
+	vet[1] = x[1];
+	vet[2] = x[2];
+	vet[3] = x[3];
+	
+	if (i==j){	
+		soma = (-2)*fHess(vet[1], vet[2], vet[3]);
+		vet[i] = vet[i]+2*h;	
+		soma=soma+fHess(vet[1],vet[2], vet[3]);	
+		vet[i]= vet[i]-4*h;	
+		soma=soma+fHess(vet[1], vet[2], vet[3]);
+		soma = soma/(4*pow(h,2));
+        return soma; 
+	}
+	//
+	else{
+		vet[i]= vet[i]+h;
+		vet[j]= vet[j]+h;
+		soma=fHess(vet[1],vet[2],vet[3]);
+		vet[j]=vet[j]-(2*h);//SUBTRAI 2 POIS SOMOU 1 EM CIMA
+		soma=soma-fHess(vet[1],vet[2], vet[3]);
+		vet[i]=vet[i]-(2*h); //SUB 2 POIS ESTAVA +1H
+		vet[j]=vet[j]+(2*h);
+		soma=soma-fHess(vet[1], vet[2], vet[3]);
+		vet[j]= vet[j]-(2*h);
+		soma= soma+fHess(vet[1], vet[2], vet[3]);
+		soma = soma/(4*pow(h,2));
+		return soma;
+	}
 }
 /*******************************************************************************
 							DIFERENCIAÇÃO NUMÉRICA
@@ -194,19 +234,72 @@ float df2(float pre, int max_ite, float func(float v), float x){
 //Procedimento Jacobiano
 void Jacobiano (int qtd, int qq, float v[], float ja[][3]){
 	
-	for(int i = 0; i < qtd; i++){
-			
-	if(vetor_global[i] == 0)
-			continue; 
-	aux_global = i+1; 		
-	gradiente(qtd,v,ja[i]); 
-	}
+	int aux = 0; 
 	
-	aux_global = 0; 
+	switch (qtd){	//Qtd é o tanto de funções que foram selecionadas
+		case 1: 	{
+						int i; 
+						for(i=0; i<3; i++){
+							if(vetor_global[i] == 0){
+								aux++;
+								continue; 
+							}
+								
+							else {
+								aux_global = i+1; 		
+								gradiente(qq,v,ja[i-aux]); 
+								break; 
+							}
+						}
+
+					}			
+		case 2: 	{
+						int i; 
+						for(i = 0; i < 3; i++){
+							if(vetor_global[i] != 0){
+								aux_global = i+1; 		
+								gradiente(qq,v,ja[i-aux]); 
+							}else aux++; 
+						}
+						break;
+					}	
+		case 3: 	for(int i=0; i<3; i++){
+						aux_global = i+1; 		
+						gradiente(qq,v,ja[i]); 		
+					}
+					break; 
+		
+	}
 }
 //Procedimento Hessiana
-void Hessiana(int vetor_x, float funcN(float v), int v[], int hess[][10]){
-	
+ int Hessiana(float pre, int ite_max, int *ite_fi, float *h,float x[], float JACO[][3], int n){ // ===================== aqui 
+	float fx, fx_ant, erro;
+	int ver,aux;
+	for(int i=0; i<n; i++){
+		for(int j=0; j<n; j++){
+			ver = (*ite_fi) = 0;
+			while(*ite_fi != ite_max && ver == 0){
+				fx_ant = fx;
+				fx = ParcialHess(x,*h,i+1,j+1);
+				//printf("\nValor de fx: %f",fx);
+				//printf("---<<>>>%d,%d>>>%.4f<<<---\n",i+1,j+1,fx);
+				//
+				if(*ite_fi > 0){ // calculo das condiçoes de parada
+					if(modulo(fx) > 1) erro  = modulo((fx - fx_ant)/fx); 
+					else erro  = modulo(fx - fx_ant)/1;  
+					if(erro < pre){
+					//	if(i == 2 && j == 2)	//printf("\nAQUI FX: %f",fx); 
+						JACO[i][j] = fx;
+						ver = 1;
+					}
+				}
+				*h = (*h)/2;
+				(*ite_fi)++;
+				if(*ite_fi == ite_max) return 0;//============alterar aqui // ultrapassou o limite de interações
+			}		
+		}
+	}
+	return 1;
 }
 /******************************************************************************
 						CÁLCULO DOS ZEROS DE FUNÇÕES
@@ -478,9 +571,9 @@ int menu(char s[],char sN[]){
 	int x; 
 	system("cls");
 	printf("\n\tTrabalho de MNC - Ciências da Computação\n");
-	printf("\n\tFunção de uma variavel escolhida atualmente:      %s",s);
-	printf("\n\tFunção de duas variaveis escolhida atualmanete:   %s",sN);
-	printf("\n\n\tEscolha o método a ser utilizado (digite em decimal):\n");
+	printf("\n\tFunção de uma variavel escolhida atualmente:      %s\n",s);
+	//printf("\n\tFunção de duas variaveis escolhida atualmanete:   %s",sN);
+	printf("\n\n\tEscolha o método a ser utilizado:\n");
 	printf("\n\t1  -  Bisseção");
 	printf("\n\t2  -  Posição Falsa (cordas)"); 
 	printf("\n\t3  -  Posição Falsa Modificada (cordas modificado)");
@@ -490,10 +583,10 @@ int menu(char s[],char sN[]){
 	printf("\n\t7  -  Derivada segunda");
 	printf("\n\t8  -  Jacobiano");
 	printf("\n\t9  -  Hessiana");
-	printf("\n\tA  -  Definir função de uma variável");
-	printf("\n\tB  -  Definir função de duas variáveis");
-	printf("\n\tC  -  Sair do programa!");
-	printf("\n\n\tOpção: ");
+	printf("\n\t10  -  Definir função de uma variável");
+	printf("\n\t11  -  Sair do programa");
+	//printf("\n\tC  -  Sair do programa!");
+	printf("\n\n\n\tOpção: ");
 	
 	do{			
 		gotoxy(17,22); 
@@ -650,10 +743,10 @@ void mostra_der(float precisao, int max_ite, float x){
 }
 
 void printa_matriz (float v[][3],int n){
-	for(int i = 0; i < n; i++){
-		printf("\n"); 
+	for(int i = 0; i < n; i++){		
 		for(int j = 0; j < n; j++)
 			printf("   %f    ",v[i][j]);
+		printf("\n\t"); 
 	}
 	
 }
@@ -728,33 +821,11 @@ int main(){
 						break; 
 						
 			case 8: 	//CÁLCULO DA MATRIZ JACOBIANA
-						tela(op,s_func,&pre,&ite,&l_inf,&l_sup);
-						system("pause"); 
-						break; 
-						
-			case 9: 	//CÁLCULO DA MATRIZ HESSIANA
-						tela(op,s_func,&pre,&ite,&l_inf,&l_sup);
-						system("pause"); 
-						break; 	
-						
-			case 10: 	system("cls"); 
-						printf("\n\tEscolha a função de uma variavel a ser computada:\n");
-						printf("\n\t1 - f(x) = x + 2cos(x)"); 
-						printf("\n\t2 - f(x) = x^3 - 4x^2 + x + 6"); 
-						printf("\n\t3 - f(x) = x^5 - (10/9)x^3 + (5/21)x");
-						printf("\n\n\tOpção: ");
-						do{
-							scanf("%d",&global_func); 
-						}while(global_func < 1 || global_func > 3); 
-						printf("\n\tFunção Escolhida com sucesso!\n\t"); 
-						system("pause");
-						break; 		
-						
-			case 11: 	system("cls"); 
+						{system("cls"); 
 						int cont = 0, x, max_x = 2; 
 						float valores_x[3], jaco[3][3];
 						
-						printf("\n\tEscolha a função de mais de uma variavel a ser computada:\n");
+						printf("\n\tEscolha a função de mais de uma variavel a ser computada (-1 para sair):\n");
 						printf("\n\t1 - f(x,y,z) = 3x + 2xy + y^2"); 
 						printf("\n\t2 - f(x,y,z) = 2x^3 - 3y^2 + zxy"); //(2*pow(x,3) - 3*pow(y,2) + z*x*y);	
 						printf("\n\t3 - f(x,y,z) = 3z + 2xy + y^2");	//(3*z + 2*x*y + y*y);	
@@ -779,22 +850,82 @@ int main(){
 						system("cls"); 
 						
 						printf("\n\n\tDigite os valores de x\n "); 
+						fflush(stdin); 
 						for(int i=0; i<max_x; i++){
 							printf("\tx%d: ",i+1); 
 							scanf("%f",&valores_x[i]);
 						}
 						
-						Jacobiano (cont,0,valores_x,jaco);						
-						printa_matriz(jaco,3);
+						Jacobiano (cont,max_x,valores_x,jaco);	
+						printf("\n\tJ(x) = \n\t");				
+						//printa_matriz(jaco,max_x);
+						for(int i = 0; i < cont; i++){
+							for(int j=0; j < max_x; j++)
+								printf("   %f   ",jaco[i][j]); 
+							printf("\n\t");
+						}
 						
 						for(int i=0; i<3; i++)
 							vetor_global[i] = 0; 
 
 						printf("\n\t");
 						system("pause");
-						break; 			
+						break;}
+						
+			case 9: 	//CÁLCULO DA MATRIZ HESSIANA
+						{
+						system("cls"); 
+						printf("\n\n\tCálculo da Matriz Hessiana!"); 
+						float pre_1, x_1[4], h_1 = 1,hess_1[3][3];
+						int iteracoes_1, max_ite_1 = 40, n; 
+						
+						printf("\n\tEscolha a função: \n"); 
+						printf("\n\t1 - f(x) = 2*x1^3 - 3*x2^2 - x1^2*x2"); 					//((2*x1*x1*x1) - (3*x2*x2) - (x1*x1*x2));
+						printf("\n\t2 - f(x) = x1^2 + x2^2 + x3^3 - 7*x1*x2 + 5*x1 - 3*x3*x2^2"); //(7*x1*x2) + (5*x1) - (3*x3*x2*x2));
+						printf("\n\n\tOpção: "); 
+						do{
+							scanf("%d",&f_hessiana); 
+						}while(f_hessiana < 1 || f_hessiana > 2); 
+						
+						if(f_hessiana == 2)
+							n = 3; 
+						else n = 2; 						
+												
+						printf("\n\tDigite a precisão: "); 
+						scanf("%f",&pre_1);
+						
+						printf("\tDigite os valores de x\n");
+						fflush(stdin);
+						for(int i=1; i<n+1;i++)						{
+							printf("\tValor de x%d : ",i);
+							scanf("%f",&x_1[i]);
+						}
+							
+						Hessiana(pre_1,max_ite_1,&iteracoes_1,&h_1,x_1,hess_1,n);
+						printf("\n\tH(x) = \n\t"); 
+						printa_matriz(hess_1,n);
+						
+						printf("\n\tMatriz Hessiana Impressa!\n\t");
+						
+						system("pause"); 
+						break; 	}
+						
+			case 10: 	system("cls"); 
+						printf("\n\tEscolha a função de uma variavel a ser computada:\n");
+						printf("\n\t1 - f(x) = x + 2cos(x)"); 
+						printf("\n\t2 - f(x) = x^3 - 4x^2 + x + 6"); 
+						printf("\n\t3 - f(x) = x^5 - (10/9)x^3 + (5/21)x");
+						printf("\n\n\tOpção: ");
+						do{
+							scanf("%d",&global_func); 
+						}while(global_func < 1 || global_func > 3); 
+						printf("\n\tFunção Escolhida com sucesso!\n\t"); 
+						system("pause");
+						break; 		
+						
+		//	case 11: 	 			
 		}
-	}while(op != 12);
+	}while(op != 11);
 	
 	printf("\n\n\tFim do programa!");
 }
