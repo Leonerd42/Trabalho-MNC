@@ -1,11 +1,11 @@
 //  Trabalho 1 - Métodos Numéricos Computacionais
 //  
 //  Grupo: 
-//			Gabriel Vieira
-//			Leonardo Silva de Oliveira
-//			Renan Scatolino Mesquita
+//			Gabriel Vieira						-- RA <171026985>
+//			Leonardo Silva de Oliveira			-- RA <171025903>
+//			Renan Scatolino Mesquita			-- RA <171025032>
 
-#include <math.h>
+#include <math.h>		
 #include <stdio.h>
 #include <conio.h>
 #include <ctype.h>
@@ -231,38 +231,37 @@ float df2(float pre, int max_ite, float func(float v), float x){
 //Procedimento Jacobiano
 void Jacobiano (int qtd, int qq, float v[], float ja[][3]){
 	
-	int aux = 0; 
-	
+	int aux = 0; 	
 	switch (qtd){	//Qtd é o tanto de funções que foram selecionadas
 		case 1: 	{
 						int i; 
 						for(i=0; i<3; i++){
 							if(vetor_global[i] == 0){
-								aux++;
-								continue; 
-							}
+								aux++;					//Aux é a variavel que conta quantas funções 
+								continue; 				//Não foram selecionadas até encontrar a função 
+							}							//Que foi selecionada
 								
 							else {
 								aux_global = i+1; 		
-								gradiente(qq,v,ja[i-aux]); 
-								break; 
-							}
-						}
+								gradiente(qq,v,ja[i-aux]); 		//Grava (linha da matriz - aux), pois foi a 
+								break; 							//Quantidade de linhas que o programa passou
+							}									//Menos a quantidade de linhas da função que 
+						}										//Não foi selecionada 
 
 					}			
 		case 2: 	{
 						int i; 
-						for(i = 0; i < 3; i++){
+						for(i = 0; i < 3; i++){					//Caso as 2 funções selecionadas não foram as duas primeiras
 							if(vetor_global[i] != 0){
 								aux_global = i+1; 		
-								gradiente(qq,v,ja[i-aux]); 
-							}else aux++; 
+								gradiente(qq,v,ja[i-aux]); 		//É descontado 1 do valor i para imprimir o valor na matriz 
+							}else aux++; 						//De forma correta
 						}
 						break;
 					}	
-		case 3: 	for(int i=0; i<3; i++){
-						aux_global = i+1; 		
-						gradiente(qq,v,ja[i]); 		
+		case 3: 	for(int i=0; i<3; i++){			//Aqui as 3 funções foram selecionadas
+						aux_global = i+1; 			//Então não há necessidade de contar quantas funções 
+						gradiente(qq,v,ja[i]); 		//Não foram selecionadas 
 					}
 					break; 
 		
@@ -745,7 +744,7 @@ int main(){
 
 	setlocale(LC_ALL,"Portuguese");
 	int op, ite; 
-	float x, pre, l_inf, l_sup;// n_sei;
+	float x, pre, l_inf, l_sup;
 	//Resultados: 
 	int ite_fim, aux;
 	float raiz, aux2, derivada1, derivada2; 
@@ -855,7 +854,7 @@ int main(){
 						}
 						
 						for(int i=0; i<3; i++)
-							vetor_global[i] = 0; 
+							vetor_global[i] = 0; 		// Zera o vetor global 
 
 						printf("\n\t");
 						system("pause");
@@ -918,6 +917,6 @@ int main(){
 		}
 	}while(op != 11);
 	
-	printf("\n\n\tFim do programa!");
+	printf("\n\tFim do programa!");
 }
 //
